@@ -1,45 +1,36 @@
-const getState = ({ getStore, getActions, setStore }) => {
-	return {
-		store: {
-			demo: [
-				{
-					title: "FIRST",
-					background: "white",
-					initial: "white"
-				},
-				{
-					title: "SECOND",
-					background: "white",
-					initial: "white"
-				}
-			]
-		},
-		actions: {
-			// Use getActions to call a function within a fuction
-			exampleFunction: () => {
-				getActions().changeColor(0, "green");
-			},
-			loadSomeData: () => {
-				/**
-					fetch().then().then(data => setStore({ "foo": data.bar }))
-				*/
-			},
-			changeColor: (index, color) => {
-				//get the store
-				const store = getStore();
+import React, { createContext, useReducer } from 'react';
 
-				//we have to loop the entire demo array to look for the respective index
-				//and change its color
-				const demo = store.demo.map((elm, i) => {
-					if (i === index) elm.background = color;
-					return elm;
-				});
-
-				//reset the global store
-				setStore({ demo: demo });
-			}
-		}
-	};
+const initialState = {
+    people: [],
+    planets: [],
+    vehicles: [],
+    favorites: []
 };
 
-export default getState;
+const reducer = (state, action) => {
+    switch (action.type) {
+        case 'SET_DATA':
+            return { ...state, [action.payload.category]: action.payload.data };
+        case 'TOGGLE_FAVORITE':
+            const isFavorite = state.favorites.find(fav => fav.id === action.payload.id);
+            return {
+                ...state,
+                favorites: isFavorite
+                    ? state.favorites.filter(fav => fav.id !== action.payload.id)
+                    : [...state.favorites, action.payload]
+            };
+        default:
+            return state;
+    }
+};
+
+export const StoreContext = createContext();
+
+export const StoreProvider = ({ children }) => {
+    const [state, dispatch] = useReducer(reducer, initialState);
+    return (
+        <StoreContext.Provider value={{ state, dispatch }}>
+            {children}
+        </StoreContext.Provider>
+    );
+};
